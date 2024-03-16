@@ -23,13 +23,13 @@ class User(AbstractUser):
 
 
 class Menu(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    menu_name = models.CharField(max_length=255)
-    description = models.TextField()
-    price = models.IntegerField(null=True)
-    category = models.CharField(max_length=255, null=True)
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
+    Name = models.CharField(max_length=255)
+    Description = models.TextField(max_length=1000)
+    Price = models.IntegerField(null=True)
+    Category = models.CharField(max_length=255, null=True)
     tags = models.CharField(max_length=255, null=True)
-    #     image = models.ImageField(upload_to="menu_images/", null=True)
+    image = models.ImageField(upload_to="menu_images/", null=True)
 
     def __str__(self):
         return self.menu_name
@@ -40,7 +40,7 @@ def generate_order_number():
 
 
 class Order(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    # user = models.ForeignKey(User, on_delete=models.CASCADE)
     items = models.ManyToManyField(Menu)
     status = models.CharField(
         max_length=10, choices=[("Open", "Open"), ("Closed", "Closed")], default="Open"
@@ -50,3 +50,12 @@ class Order(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class Task(models.Model):
+    title = models.CharField(max_length=100)
+    description = models.TextField()
+    status = models.CharField(max_length=20, choices=[('todo', 'Todo'), ('in_progress', 'In Progress'), ('done', 'Done')])
+
+    def __str__(self):
+        return self.title

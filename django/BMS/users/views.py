@@ -1,3 +1,5 @@
+from django.db import transaction
+from django.test import TransactionTestCase
 from rest_framework.decorators import (
     api_view,
     permission_classes,
@@ -6,10 +8,10 @@ from rest_framework.decorators import (
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.authtoken.models import Token
-from users.models import Order, User, Menu
+from users.models import Order, Task, User, Menu
 
 from django.contrib.auth import authenticate, login, logout
-from .serializers import OrderSerializer, UserSerializer, MenuSerialiazer
+from .serializers import OrderSerializer, TaskSerializer, UserSerializer, MenuSerialiazer
 
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
@@ -73,12 +75,22 @@ def menu_list(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def create_menu(request):
-    user = request.user  # Assuming you are using authentication
+    # user = request.user  # Assuming you are using authentication
+    # serializer = MenuSerialiazer(data=request.data)
+    # Menu.objects.create(**request.data, user=user)
+
+    # if serializer.is_valid():
+    #     serializer.save(user=user)
+    #     return Response(serializer.data)
+    # else:
+    #     return Response(serializer.errors)
+
+    # user = request.user  # Assuming you are using authentication
     serializer = MenuSerialiazer(data=request.data)
-    Menu.objects.create(**request.data, user=user)
+    Menu.objects.create(**request.data)
 
     if serializer.is_valid():
-        serializer.save(user=user)
+        serializer.save()
         return Response(serializer.data)
     else:
         return Response(serializer.errors)
@@ -110,26 +122,43 @@ def update_menu(request, pk=id):
 # ------------------------------------------ORDER--------------------------------------------
 
 
+# @api_view(["POST"])
+# @authentication_classes([TokenAuthentication])
+# @permission_classes([IsAuthenticated])
+# def create_order(request):
+#     user = request.user
+#     serializer = OrderSerializer(data=request.data)
+#     # items = request.data.get("items")
+#     # menu_item = items[0]
+#     # menu_id = menu_item.get("id")
+#     # print(menu_id)
+#     # print("\n\n MENU ID", menu_id)
+#     # menu_obj = Menu.objects.get(id=menu_id)
+#     # Order.objects.create(**request.data, user=user, items=[menu_obj])
+
+#     if serializer.is_valid():
+#         Order.objects.create(**request.data, user=user)
+#         serializer.save(user=user)
+#         return Response(serializer.data)
+#     return Response(serializer.errors)
+
 @api_view(["POST"])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def create_order(request):
-    user = request.user
+    # user = request.user
     serializer = OrderSerializer(data=request.data)
-    # items = request.data.get("items")
-    # menu_item = items[0]
-    # menu_id = menu_item.get("id")
-    # print(menu_id)
-    # print("\n\n MENU ID", menu_id)
-    # menu_obj = Menu.objects.get(id=menu_id)
-    # Order.objects.create(**request.data, user=user, items=[menu_obj])
 
     if serializer.is_valid():
-        Order.objects.create(**request.data, user=user)
-        serializer.save(user=user)
-        return Response(serializer.data)
+        # with TransactionTestCase.atomic():
+            order = serializer.save()
+            items_data = request.data.get("items", [])
+            for item_data in items_data:
+                menu_id = item_data.get("id")
+                menu_obj = Menu.objects.get(id=menu_id)
+                order.items.add(menu_obj)
+        # return Response(serializer.data)
     return Response(serializer.errors)
-
 
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([IsAuthenticated])
@@ -151,5 +180,50 @@ def update_order(request, order_id):
         order.delete()
         return Response("order deleted successfull")
 
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_orders(request):
+    order = Order.objects.all()  # complex data
+    serializer = OrderSerializer(order, many=True)
+    return Response(serializer.data)
 
+# ======================================================TAKSA================================================
+
+
+
+@api_view(['GET', 'POST'])
+def task_list(request):
+    if request.method == 'GET':
+        tasks = Task.objects.all()
+        serializer = TaskSerializer(tasks, many=True)
+        return Response(serializer.data)
+
+    elif request.method == 'POST':
+        serializer = TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=201)
+        return Response(serializer.errors, status=400)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def task_detail(request, pk):
+    try:
+        task = Task.objects.get(pk=pk)
+    except Task.DoesNotExist:
+        return Response(status=404)
+
+    if request.method == 'GET':
+        serializer = TaskSerializer(task)
+        return Response(serializer.data)
+
+    elif request.method == 'PUT':
+        serializer = TaskSerializer(task, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=400)
+
+    elif request.method == 'DELETE':
+        task.delete()
+        return Response(status=204)
 # ------------------------------------------------------------------------------------------------------------------------------
