@@ -9,13 +9,17 @@ from .views import (
     create_order,
     get_orders,
     update_order,
-    task_list, task_detail
+    task_list, 
+    task_detail,
+    get_users
 )
 
 urlpatterns = [
     path("signup/", signup, name="signup"),
     path("login/", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
+    path("users/", get_users, name="get_users"),
+
     # --------------------------------------------------------------------
 
     path("create_menu/", create_menu, name="create_menu"),

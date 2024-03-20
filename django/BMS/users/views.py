@@ -60,6 +60,34 @@ def logout_view(request):
     return Response({"success": "Logged out successfully"})
 
 
+@api_view(["GET", "PUT", "DELETE"])
+@permission_classes([IsAuthenticated])
+# @permission_classes([AllowAny])
+def update_users(request, pk=id):
+    user = User.objects.get(pk=pk)
+    if request.method == "GET":
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    if request.method == "PUT":
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
+
+    if request.method == "DELETE":
+        user.delete()
+        return Response("order deleted successfull")
+
+@api_view(["GET"])
+@permission_classes([AllowAny])
+def get_users(request):
+    user = User.objects.all()  # complex data
+    serializer = UserSerializer(user, many=True)
+    return Response(serializer.data)
+
+
 # ==============================================MENU========================================
 
 
