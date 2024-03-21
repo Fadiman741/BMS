@@ -220,6 +220,8 @@ def get_orders(request):
 
 
 @api_view(['GET', 'POST'])
+@permission_classes([AllowAny])
+
 def task_list(request):
     if request.method == 'GET':
         tasks = Task.objects.all()
@@ -234,6 +236,7 @@ def task_list(request):
         return Response(serializer.errors, status=400)
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([AllowAny])
 def task_detail(request, pk):
     try:
         task = Task.objects.get(pk=pk)

@@ -33,6 +33,6 @@ urlpatterns = [
 
     # --------------------------------------------------------------------
 
-    path('tasks/', task_list),
-    path('tasks/<int:pk>/', task_detail),
+    path('tasks/', task_list,name="task_list"),
+    path('tasks/<int:pk>/', task_detail,name="task_detail"),
 ]
