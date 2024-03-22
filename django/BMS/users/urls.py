@@ -11,14 +11,20 @@ from .views import (
     update_order,
     task_list, 
     task_detail,
-    get_users
+    get_users,
+    update_user,
+    get_current_user
 )
 
 urlpatterns = [
+        
     path("signup/", signup, name="signup"),
     path("login/", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
     path("users/", get_users, name="get_users"),
+    path('user/<int:pk>/', update_user,name="update_user"),
+    path('get_current_user/', get_current_user, name='get_current_user'),
+
 
     # --------------------------------------------------------------------
 

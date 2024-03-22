@@ -59,6 +59,15 @@ def logout_view(request):
     logout(request)
     return Response({"success": "Logged out successfully"})
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def get_current_user(request):
+    if request.user.is_authenticated:
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data)
+    else:
+        return Response({'error': 'User not authenticated'})
+
 
 @api_view(["GET", "PUT", "DELETE"])
 @permission_classes([IsAuthenticated])
@@ -87,6 +96,24 @@ def get_users(request):
     serializer = UserSerializer(user, many=True)
     return Response(serializer.data)
 
+@api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([AllowAny])
+def update_user(request, pk=id):
+    user = User.objects.get(pk=pk)
+    if request.method == "GET":
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    if request.method == "PUT":
+        serializer = UserSerializer(user, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors)
+
+    if request.method == "DELETE":
+        user.delete()
+        return Response("menu deleted successfull")
 
 # ==============================================MENU========================================
 
@@ -221,7 +248,6 @@ def get_orders(request):
 
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
-
 def task_list(request):
     if request.method == 'GET':
         tasks = Task.objects.all()
